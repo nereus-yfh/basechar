@@ -42,8 +42,19 @@ inline bool Sequence:: operator == (const Sequence &seq) {
     if (_type != seq.type()) {
         return false;
     }
-    //BaseChar
-    //return (strncmp(_type.)) 
+    if (_type == SEQUENCE_TYPE_SINGLE) {
+        if (_words[0] == NULL || seq.words(0) == NULL) {
+            return false;
+        }
+        return strcmp(_words[0]->cstr(), (*(seq.words(0))).cstr()) == 0;
+    } else {
+        if (_words[0] == NULL || _words[1] == NULL || 
+            seq.words(0) == NULL || seq.words(1) == NULL) {
+            return false;
+        }
+        return strcmp(_words[0]->cstr(), (*(seq.words(0))).cstr()) == 0
+            && strcmp(_words[1]->cstr(), (*(seq.words(1))).cstr()) == 0;
+    }
 }
 
 int Sequence::cstr(char *s, size_t len) const {

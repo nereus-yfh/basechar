@@ -1,4 +1,7 @@
 #include <cstdio>
+#ifndef ENCODE_BASE_CHAR_H
+#define ENCODE_BASE_CHAR_H
+
 enum __CHAR_STAT {
     CHAR_STAT_SUCC = 0,
     CHAR_STAT_EOF,
@@ -48,3 +51,4 @@ void BaseChar::clear() {
     _word = NULL;
     _len = 0;
 }
+#endif

@@ -1,4 +1,5 @@
 #include "utf8_char.h"
+#include "sequence.h"
 
 int main () {
     Utf8Char *utf8 = new Utf8Char();

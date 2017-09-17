@@ -1,5 +1,6 @@
 #include "base_char.h"
-
+#ifndef ENCODE_UTF8_CHAR_H
+#define ENCODE_UTF8_CHAR_H
 class Utf8Char : public BaseChar {
 public:
     Utf8Char();
@@ -58,3 +59,4 @@ int Utf8Char::read(FILE *fp) {
     }
     return CHAR_STAT_SUCC;
 }
+#endif
