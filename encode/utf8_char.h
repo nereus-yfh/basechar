@@ -19,12 +19,42 @@ int Utf8Char::read(FILE *fp) {
         return CHAR_STAT_EOF;
     }
     unsigned char c = fgetc(fp);
+    delete[] _word;
     if ((c & 0x80) == 0) {
         _len = 1;
-        delete[] _word;
         _word = new char[_len + 1];
         _word[0] = c;
+        _word[_len] = 0;
         return CHAR_STAT_SUCC;
     }
-    return CHAR_STAT_ERR;
+    int cnt = 0;
+    unsigned char mask = 0x80;
+    while (c & mask) {
+        cnt ++;
+        mask >>= 1;
+    }
+    if (cnt > 6) {
+        return CHAR_STAT_ERR;
+    }
+    _len = cnt;
+    _word = new char[_len+1];
+    _word[0] = c;
+    _word[_len] = 0;
+    int status = CHAR_STAT_SUCC;
+    for(int i = 1; i < cnt; i++) {
+        if(feof(fp)) {
+            status = CHAR_STAT_EOF;
+            break; 
+        }
+        _word[i] = fgetc(fp);
+        if ((_word[i] & 0xc0) != 0x80) {
+            status = CHAR_STAT_ERR;
+            break;
+        }
+    }
+    if (status != CHAR_STAT_SUCC) {
+        clear();
+        return CHAR_STAT_ERR;
+    }
+    return CHAR_STAT_SUCC;
 }

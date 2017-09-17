@@ -14,6 +14,7 @@ public:
     virtual int read(FILE *) = 0;
     virtual char * cstr() const;
     virtual size_t size() const;
+    virtual void clear();
 protected:
     char *_word;
     size_t _len;
@@ -31,7 +32,7 @@ BaseChar::BaseChar(const BaseChar &c) {
 }
 
 BaseChar::~BaseChar() {
-    delete[] _word;
+    clear();
 }
 
 char *BaseChar::cstr() const{
@@ -42,3 +43,8 @@ size_t BaseChar::size() const{
     return _len;
 }
 
+void BaseChar::clear() {
+    delete[] _word;
+    _word = NULL;
+    _len = 0;
+}
