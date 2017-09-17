@@ -1,4 +1,5 @@
 #include "utf8_char.h"
+#include <new>
 #include <cstring>
 #ifndef ENCODE_SEQUENCE_CHAR_H
 #define ENCODE_SEQUENCE_CHAR_H
@@ -21,7 +22,7 @@ public:
     inline int type() const {return _type;}
     int cstr(char *s, size_t len) const;
     inline BaseChar *words(size_t id) const {return _words[id];}
-    int set_word(size_t id, BaseChar *word);
+    int set_word(int type, size_t id, BaseChar *word);
 private:
     BaseChar *_words[2];
     int _type;
@@ -58,7 +59,7 @@ inline bool Sequence:: operator == (const Sequence &seq) {
 }
 
 int Sequence::cstr(char *s, size_t len) const {
-    if (len > _len) {
+    if (len <= _len) {
         return SEQUENCE_CSTR_ERR;
     }
     int offset = snprintf(s, len, "%s", _words[0]->cstr());
@@ -66,5 +67,17 @@ int Sequence::cstr(char *s, size_t len) const {
         offset = snprintf(s+offset, len, "%s", _words[1]->cstr());
     }
     return offset;
+}
+
+int Sequence::set_word(int type, size_t id, BaseChar *pc) {
+    delete _words[id];
+    _words[id] = pc;
+    _type = type;
+    _len = pc->size();
+}
+
+template <class char_type>
+BaseChar *char_dynamic_create() {
+    return new(std::nothrow) char_type();
 }
 #endif
