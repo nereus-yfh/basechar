@@ -1,6 +1,7 @@
 #include "utf8_char.h"
 #include <new>
 #include <cstring>
+#include <string>
 #ifndef ENCODE_SEQUENCE_CHAR_H
 #define ENCODE_SEQUENCE_CHAR_H
 enum __sequence_enum {
@@ -14,70 +15,54 @@ class Sequence {
 public:
     Sequence();
     ~Sequence();
+    Sequence(int type,const char *s) ;
+    
 public:
     inline bool operator == (const Sequence& seq);
-    inline bool operator < (const Sequence& seq);
+    inline bool operator < (const Sequence& seq) {return _uv > seq.uv();}
     inline size_t uv() const {return _uv;}
-    inline size_t size() const {return _len;}
+    inline size_t size() const {return _words.size();}
     inline int type() const {return _type;}
-    int cstr(char *s, size_t len) const;
-    inline BaseChar *words(size_t id) const {return _words[id];}
-    int set_word(int type, size_t id, BaseChar *word);
+    inline const char* cstr() const {return _words.c_str();}
+    inline const std::string& words() const {return _words;}
+    inline void add_uv() {_uv++;}
+
+    //inline BaseChar *words(size_t id) const {return _words[id];}
+    //int set_word(int type, size_t id, BaseChar *word);
 private:
-    BaseChar *_words[2];
+    std::string _words;
     int _type;
     size_t _uv;
-    size_t _len;
 };
 
 Sequence :: Sequence() {
     _uv = 0;
     _type = SEQUENCE_TYPE_NONE;
-    _len = 0;
 }
 
 Sequence :: ~Sequence() {
 }
 
+Sequence :: Sequence(int type, const char *s) {
+    _words = s;
+    /*
+    if (type == SEQUENCE_TYPE_PAIR && second != NULL) {
+        _words += second->cstr();
+    }
+    */
+    _type = type;
+    _uv = 1;
+}
 inline bool Sequence:: operator == (const Sequence &seq) {
     if (_type != seq.type()) {
         return false;
     }
-    if (_type == SEQUENCE_TYPE_SINGLE) {
-        if (_words[0] == NULL || seq.words(0) == NULL) {
-            return false;
-        }
-        return strcmp(_words[0]->cstr(), (*(seq.words(0))).cstr()) == 0;
-    } else {
-        if (_words[0] == NULL || _words[1] == NULL || 
-            seq.words(0) == NULL || seq.words(1) == NULL) {
-            return false;
-        }
-        return strcmp(_words[0]->cstr(), (*(seq.words(0))).cstr()) == 0
-            && strcmp(_words[1]->cstr(), (*(seq.words(1))).cstr()) == 0;
-    }
+    return _words == seq.words();
 }
-
-int Sequence::cstr(char *s, size_t len) const {
-    if (len <= _len) {
-        return SEQUENCE_CSTR_ERR;
-    }
-    int offset = snprintf(s, len, "%s", _words[0]->cstr());
-    if (_type == SEQUENCE_TYPE_PAIR) {
-        offset = snprintf(s+offset, len, "%s", _words[1]->cstr());
-    }
-    return offset;
-}
-
-int Sequence::set_word(int type, size_t id, BaseChar *pc) {
-    delete _words[id];
-    _words[id] = pc;
-    _type = type;
-    _len = pc->size();
-}
-
+/*
 template <class char_type>
 BaseChar *char_dynamic_create() {
     return new(std::nothrow) char_type();
 }
+*/
 #endif

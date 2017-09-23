@@ -19,8 +19,8 @@ int Utf8Char::read(FILE *fp) {
     if (feof(fp)) {
         return CHAR_STAT_EOF;
     }
-    unsigned char c = fgetc(fp);
     delete[] _word;
+    unsigned char c = fgetc(fp);
     if ((c & 0x80) == 0) {
         _len = 1;
         _word = new char[_len + 1];
