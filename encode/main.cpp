@@ -2,9 +2,9 @@
 #include "dict.h"
 #include "sequence.h"
 
-int main () {
-    Utf8Char *utf8 = new Utf8Char();
-    utf8->read(stdin);
+int main (int argc, char **argv) {
     //Utf8Char tmp(*utf8);
+    Dict *dict = new Dict();
+    dict->create_dict(argc, argv, NULL);
     return 0;
 }

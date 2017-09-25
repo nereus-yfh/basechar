@@ -21,6 +21,9 @@ int Utf8Char::read(FILE *fp) {
     }
     delete[] _word;
     unsigned char c = fgetc(fp);
+    if ((char)c == EOF) {
+        return CHAR_STAT_EOF;
+    }
     if ((c & 0x80) == 0) {
         _len = 1;
         _word = new char[_len + 1];
