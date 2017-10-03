@@ -5,6 +5,6 @@
 int main (int argc, char **argv) {
     //Utf8Char tmp(*utf8);
     Dict *dict = new Dict();
-    dict->create_dict(argc, argv, NULL);
+    dict->create_dict(argc, argv, stdout);
     return 0;
 }

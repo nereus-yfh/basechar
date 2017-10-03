@@ -20,7 +20,7 @@ public:
     
 public:
     inline bool operator == (const Sequence& seq);
-    inline bool operator < (const Sequence& seq) {return _uv > seq.uv();}
+    inline bool operator < (const Sequence& seq) {return _uv*_words.size() > seq.uv() * seq.size();}
     inline size_t uv() const {return _uv;}
     inline size_t size() const {return _words.size();}
     inline int type() const {return _type;}

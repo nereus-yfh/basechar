@@ -24,7 +24,7 @@ namespace __gnu_cxx
 }
 
 bool cmpseq(Sequence *a, Sequence *b) {
-    return a->uv() > b->uv();
+    return a->uv()*a->size() > b->uv() * b->size();
 }
 class Dict {
 public :
@@ -123,13 +123,57 @@ int Dict::create_dict(int filecount, char **filename, FILE *foutput) {
                 single_used.insert(second);
             }
         }
-
-        for (int i = 0 ; i < pair_word.size(); i ++) {
-            if(pair_word[i]->type() != SEQUENCE_TYPE_NOUSE) {
-                std::cout << pair_word[i]->words() << "\n";
+        for (int i = 0; i < pair_word.size(); i++) {
+            Sequence *seq = pair_word[i];
+            if (seq->type() == SEQUENCE_TYPE_NOUSE) {
+                continue;
+            }
+            std::string temps;
+            bool found = false;
+            for (int j = 0; j <= 255; j ++) {
+                std::string tempj;
+                tempj += (unsigned char)j;
+                if ((j & 0x80) != 0) {
+                    continue;
+                }
+                if (single_map.find(tempj) != single_map.end()) {
+                    continue;
+                }
+                if (single_used.find(tempj) == single_used.end()) {
+                    single_used.insert(tempj);
+                    temps += (unsigned char)j;
+                    found = true;
+                    break;
+                }
+            }
+            for (int j = single_word.size() - 1;j >= 0 && !found; j--) {
+                Sequence *single_seq = single_word[j];
+                if (single_seq->type() == SEQUENCE_TYPE_NOUSE) {
+                    continue;
+                }
+                if (single_used.find(single_seq->words()) != single_used.end()) {
+                    continue;
+                }
+                if (single_seq->size() * single_seq->uv() < seq->size() * seq->uv()) {
+                    temps += single_seq->words();;
+                    found = true;
+                    single_used.insert(single_seq->words());
+                    break;
+                }
+            }
+            if (found) {
+                //printf("                  %s\n", seq->words().c_str());
+                fwrite(temps.c_str(), temps.size(), 1, foutput);
+                fwrite(seq->words().c_str(), seq->size(), 1, foutput);
+                fputc('\n', foutput);
             }
         }
 
+        for (int i = 0 ; i < pair_word.size(); i ++) {
+            if(pair_word[i]->type() != SEQUENCE_TYPE_NOUSE) {
+                std::cout << pair_word[i]->words() << "   " << pair_word[i]->uv() << "\n";
+            }
+        }
     }
 
 
