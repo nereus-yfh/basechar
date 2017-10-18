@@ -32,6 +32,10 @@ public :
     ~Dict();
 public : 
     int create_dict(int filecount, char **filname, FILE *foutput);
+    int load_dict(FILE *dict_file);
+private:
+    __gnu_cxx::hash_map<std::string, std::string> _single_2_pair;
+    __gnu_cxx::hash_map<std::string, std::string> _pair_2_single;
 };
 
 Dict::Dict() {
@@ -165,16 +169,38 @@ int Dict::create_dict(int filecount, char **filename, FILE *foutput) {
                 //printf("                  %s\n", seq->words().c_str());
                 fwrite(temps.c_str(), temps.size(), 1, foutput);
                 fwrite(seq->words().c_str(), seq->size(), 1, foutput);
-                fputc('\n', foutput);
             }
         }
-
+        /*
         for (int i = 0 ; i < pair_word.size(); i ++) {
             if(pair_word[i]->type() != SEQUENCE_TYPE_NOUSE) {
                 std::cout << pair_word[i]->words() << "   " << pair_word[i]->uv() << "\n";
             }
         }
+        */
     }
+}
 
-
+int Dict::load_dict(FILE *fp) {
+    Utf8Char* ch = new Utf8Char();
+    Utf8Char* chleft = new Utf8Char();
+    std::string single, pair;
+    while(!feof(fp)) {
+        if (ch->read(fp) == CHAR_STAT_SUCC) {
+            single = ch->cstr();
+        } else {
+            return DICT_ERR;
+        }
+        if (ch->read(fp) != CHAR_STAT_SUCC) {
+            return DICT_ERR;
+        }
+        if (chleft->read(fp) != CHAR_STAT_SUCC) {
+            return DICT_ERR;
+        }
+        pair = chleft->cstr();
+        pair += ch -> cstr();
+        std::cout << single << "   " << pair << std::endl;
+        _single_2_pair[single] = pair;
+        _pair_2_single[pair] = single;
+    }
 }
