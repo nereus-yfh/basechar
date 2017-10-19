@@ -33,6 +33,8 @@ public :
 public : 
     int create_dict(int filecount, char **filname, FILE *foutput);
     int load_dict(FILE *dict_file);
+    int encode(FILE *dict, FILE *fin, FILE *fout);
+    int encode(FILE *fin, FILE *fout);
 private:
     __gnu_cxx::hash_map<std::string, std::string> _single_2_pair;
     __gnu_cxx::hash_map<std::string, std::string> _pair_2_single;
@@ -182,6 +184,8 @@ int Dict::create_dict(int filecount, char **filename, FILE *foutput) {
 }
 
 int Dict::load_dict(FILE *fp) {
+    _single_2_pair.clear();
+    _pair_2_single.clear();
     Utf8Char* ch = new Utf8Char();
     Utf8Char* chleft = new Utf8Char();
     std::string single, pair;
@@ -203,4 +207,66 @@ int Dict::load_dict(FILE *fp) {
         _single_2_pair[single] = pair;
         _pair_2_single[pair] = single;
     }
+}
+
+int Dict::encode(FILE *dict, FILE *fin, FILE *fout) {
+    load_dict(dict);
+    encode(fin, fout);
+}
+
+int Dict::encode(FILE *fin, FILE *fout) {
+    int state = 0;
+    std::string a, b;
+    Utf8Char* ch = new Utf8Char();
+    while (!feof(fin)) {
+        int errxxno = 0;
+        if ((errxxno = ch->read(fin)) != CHAR_STAT_ERR) {
+            a = ch->cstr();
+        } else {
+            return DICT_ERR;
+        }
+        if (errxxno == CHAR_STAT_EOF) {
+            if (state == 1) {
+                fwrite(b.c_str(), b.size(), 1, fout);
+            }
+            break;
+        }
+        if (state == 0) {
+            if (_single_2_pair.find(a) != _single_2_pair.end()) {
+                std::string outbuf = _single_2_pair[a];
+                fwrite(outbuf.c_str(), outbuf.size(), 1, fout);
+                b.clear();
+                state = 0;
+            } else {
+                b = a;
+                state = 1;
+            }
+        } else {
+            std::string pair = b + a;
+            if (_pair_2_single.find(pair) != _pair_2_single.end()) {
+                std::string outbuf = _pair_2_single[pair];
+                fwrite(outbuf.c_str(), outbuf.size(), 1, fout);
+                b.clear();
+                state = 0;
+            } else {
+                fwrite(b.c_str(), b.size(), 1, fout);
+                if (_single_2_pair.find(a) != _single_2_pair.end()) {
+                    std::string outbuf = _single_2_pair[a];
+                    int buflen = outbuf.size();
+                    if (outbuf.substr(0, buflen/2) == outbuf.substr(buflen/2, buflen - buflen/2) 
+                        && outbuf.substr(0, buflen/2) == b) {
+                        fwrite(a.c_str(), a.size(), 1, fout);
+                    } else {
+                        fwrite(outbuf.c_str(), buflen, 1, fout);
+                    }
+                    b.clear();
+                    state = 0;
+                } else {
+                    state = 1;
+                    b = a;
+                }
+            }
+        }
+    }
+    return DICT_SUCC; 
 }
