@@ -136,7 +136,7 @@ int Dict::create_dict(int filecount, char **filename, FILE *foutput) {
             }
             std::string temps;
             bool found = false;
-            for (int j = 0; j <= 255; j ++) {
+            for (int j = 1; j <= 255; j ++) {
                 std::string tempj;
                 tempj += (unsigned char)j;
                 if ((j & 0x80) != 0) {
@@ -203,7 +203,10 @@ int Dict::load_dict(FILE *fp) {
         }
         pair = chleft->cstr();
         pair += ch -> cstr();
-        std::cout << single << "   " << pair << std::endl;
+        //printf("%d ", single[0]);
+        //printf("%d ", pair[0]);
+        //printf("%d \n", pair[1]);
+        //std::cout << single << "   " << pair << std::endl;
         _single_2_pair[single] = pair;
         _pair_2_single[pair] = single;
     }
