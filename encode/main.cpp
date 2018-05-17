@@ -10,13 +10,14 @@ int main (int argc, char **argv) {
     }
     if (strcmp(argv[1], "createdict") == 0) {
         Dict *dict = new Dict();
-        dict->create_dict(argc - 1, argv+1 , stdout);
-        return 1;
+        int ret = dict->create_dict(argc - 1, argv+1 , stdout);
+        printf("%d\n", ret);
+        return 0;
     }
     if (strcmp(argv[1], "encode") == 0) {
         Dict *dict = new Dict();
         FILE *fdict = fopen("dict", "r");
-        dict->load_dict(fdict);
+        int ret = dict->load_dict(fdict);
         dict->encode(stdin, stdout);
     }
     return 0;

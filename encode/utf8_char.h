@@ -1,3 +1,5 @@
+//utf8字符类，每个对象包含一个utf8字符
+
 #include "base_char.h"
 #ifndef ENCODE_UTF8_CHAR_H
 #define ENCODE_UTF8_CHAR_H
@@ -15,6 +17,7 @@ Utf8Char::Utf8Char() {
 Utf8Char::~Utf8Char() {
 }
 
+//从文件读取一个utf8字符
 int Utf8Char::read(FILE *fp) {
     if (feof(fp)) {
         return CHAR_STAT_EOF;

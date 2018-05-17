@@ -1,3 +1,5 @@
+//保存字符对及频率
+
 #include "utf8_char.h"
 #include <new>
 #include <cstring>

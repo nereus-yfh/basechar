@@ -9,6 +9,7 @@ enum _dict_enum {
     DICT_SUCC = 0,
     DICT_ERR,
 };
+//hash函数
 namespace __gnu_cxx
 {
     template<> struct hash<const std::string>
@@ -22,10 +23,12 @@ namespace __gnu_cxx
         { return hash<const char*>()( s.c_str() ); }
     };
 }
-
+//字符对排序比较函数
 bool cmpseq(Sequence *a, Sequence *b) {
     return a->uv()*a->size() > b->uv() * b->size();
 }
+
+//dict类，主要用于字典生成和加密
 class Dict {
 public :
     Dict();
@@ -46,12 +49,15 @@ Dict::Dict() {
 Dict::~Dict() {
 }
 
+//生成字典
 int Dict::create_dict(int filecount, char **filename, FILE *foutput) {
     size_t file_size = 0;
     std::vector<Sequence *> single_word;
     std::vector<Sequence *> pair_word;
     __gnu_cxx::hash_map<std::string, int> single_map;
     __gnu_cxx::hash_map<std::string, int> pair_map;
+
+    //遍历文件读取单个字符和字符对
     for (int filei = 1; filei < filecount; filei++) {
         FILE * fp = fopen(filename[filei], "r");
         if (fp == NULL) {
@@ -111,78 +117,58 @@ int Dict::create_dict(int filecount, char **filename, FILE *foutput) {
             std::swap(ch, last_ch);
         }
         fclose(fp);
-
-        std::sort(single_word.begin(), single_word.end(), cmpseq);
-        std::sort(pair_word.begin(), pair_word.end(), cmpseq);
-        
-        __gnu_cxx::hash_set<std::string> single_used;
-        
-        for (int i = 0; i < pair_word.size(); i ++) {
-            Sequence *seq = pair_word[i];
-            const std::string &seq_word = seq->words();
-            std::string first = std::string(seq_word, 0, seq->mid());
-            std::string second = std::string(seq_word, seq->mid(), seq_word.size());
-            if (single_used.find(first) != single_used.end() || single_used.find(second) != single_used.end()) {
-                seq->set_type(SEQUENCE_TYPE_NOUSE);
-            } else {
-                single_used.insert(first);
-                single_used.insert(second);
-            }
+    }
+    //根据字符对长度和频率排序
+    std::sort(single_word.begin(), single_word.end(), cmpseq);
+    std::sort(pair_word.begin(), pair_word.end(), cmpseq);
+    
+    __gnu_cxx::hash_set<std::string> single_used;
+    
+    //替换并打印字典
+    for (int i = 0; i < pair_word.size(); i ++) {
+        Sequence *seq = pair_word[i];
+        const std::string &seq_word = seq->words();
+        std::string first = std::string(seq_word, 0, seq->mid());
+        std::string second = std::string(seq_word, seq->mid(), seq_word.size());
+        if (single_used.find(first) != single_used.end() || single_used.find(second) != single_used.end()) {
+            seq->set_type(SEQUENCE_TYPE_NOUSE);
+        } else {
+            single_used.insert(first);
+            single_used.insert(second);
         }
-        for (int i = 0; i < pair_word.size(); i++) {
-            Sequence *seq = pair_word[i];
-            if (seq->type() == SEQUENCE_TYPE_NOUSE) {
+    }
+    for (int i = 0; i < pair_word.size(); i++) {
+        bool found = false;
+        Sequence *seq = pair_word[i];
+        if (seq->type() == SEQUENCE_TYPE_NOUSE) {
+            continue;
+        }
+        std::string temps;
+        for (int j = single_word.size() - 1;j >= 0; j--) {
+            Sequence *single_seq = single_word[j];
+            if (single_seq->type() == SEQUENCE_TYPE_NOUSE) {
                 continue;
             }
-            std::string temps;
-            bool found = false;
-            for (int j = 1; j <= 255; j ++) {
-                std::string tempj;
-                tempj += (unsigned char)j;
-                if ((j & 0x80) != 0) {
-                    continue;
-                }
-                if (single_map.find(tempj) != single_map.end()) {
-                    continue;
-                }
-                if (single_used.find(tempj) == single_used.end()) {
-                    single_used.insert(tempj);
-                    temps += (unsigned char)j;
-                    found = true;
-                    break;
-                }
+            if (single_used.find(single_seq->words()) != single_used.end()) {
+                continue;
             }
-            for (int j = single_word.size() - 1;j >= 0 && !found; j--) {
-                Sequence *single_seq = single_word[j];
-                if (single_seq->type() == SEQUENCE_TYPE_NOUSE) {
-                    continue;
-                }
-                if (single_used.find(single_seq->words()) != single_used.end()) {
-                    continue;
-                }
-                if (single_seq->size() * single_seq->uv() < seq->size() * seq->uv()) {
-                    temps += single_seq->words();;
-                    found = true;
-                    single_used.insert(single_seq->words());
-                    break;
-                }
-            }
-            if (found) {
-                //printf("                  %s\n", seq->words().c_str());
-                fwrite(temps.c_str(), temps.size(), 1, foutput);
-                fwrite(seq->words().c_str(), seq->size(), 1, foutput);
+            if (single_seq->size() * single_seq->uv() < seq->size() * seq->uv()) {
+                temps += single_seq->words();;
+                found = true;
+                single_used.insert(single_seq->words());
+                break;
             }
         }
-        /*
-        for (int i = 0 ; i < pair_word.size(); i ++) {
-            if(pair_word[i]->type() != SEQUENCE_TYPE_NOUSE) {
-                std::cout << pair_word[i]->words() << "   " << pair_word[i]->uv() << "\n";
-            }
+        if (found) {
+            fwrite(temps.c_str(), temps.size(), 1, foutput);
+            fwrite(seq->words().c_str(), seq->size(), 1, foutput);
         }
-        */
     }
+        
+    return 0;
 }
 
+//字典加载
 int Dict::load_dict(FILE *fp) {
     _single_2_pair.clear();
     _pair_2_single.clear();
@@ -217,6 +203,7 @@ int Dict::encode(FILE *dict, FILE *fin, FILE *fout) {
     encode(fin, fout);
 }
 
+//压缩
 int Dict::encode(FILE *fin, FILE *fout) {
     int state = 0;
     std::string a, b;

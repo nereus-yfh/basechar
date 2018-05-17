@@ -1,3 +1,5 @@
+//字符类型基类
+
 #include <cstdio>
 #ifndef ENCODE_BASE_CHAR_H
 #define ENCODE_BASE_CHAR_H
